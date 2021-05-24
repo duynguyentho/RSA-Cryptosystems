@@ -46,9 +46,13 @@ private:
 private:
     char convertIntToChar(int a);
 private:
-    QString encrypt();
+    char* encrypt(QString);
 private:
-    QString decrypt();
+    char* decrypt(QString);
+private:
+    QString readFile();
+private:
+    void writeFile();
 private:
     Ui::MainWindow *ui;
 };

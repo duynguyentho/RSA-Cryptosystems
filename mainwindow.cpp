@@ -1,5 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include <QDebug>
+#include <QFile>
+#include <QTextStream>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -14,6 +17,7 @@ MainWindow::~MainWindow()
 }
 int p = 4, q = 3;
 int n, phi_n;
+int s;
 int b;
 int temp[100];
 void MainWindow::on_createKey_clicked()
@@ -21,24 +25,29 @@ void MainWindow::on_createKey_clicked()
     getPair();
     n = p * q;
     phi_n = (p-1) * (q - 1);
+    printf("\np va q: %d %d",p,q);
+    printf("\nphi_n: %d",phi_n);
+    printf("\n n: %d", n);
     QString n = getPublicKey();
     QString m = getPrivateKey();
+    printf("\n b: %d",b);
+    printf("\n s: %d\n",s);
     ui->Kpub->setText(n);
     ui->privateKey->setText(m);
 }
 QString eMsg, deMsg;
 void MainWindow::on_encryptBtn_clicked()
 {
-    eMsg = ui->encryptText->toPlainText();
-    QString res = encrypt();
-    ui->decryptText->setPlainText(res);
+    eMsg = ui->encryptText->text();
+    QString res = encrypt(eMsg);
+    ui->decryptText->setText(res);
 }
 void MainWindow::getPair(){
     do{
-        p = random(2,50);
+        p = random(2,20);
     }while(!isPrime(p));
     do{
-        q = random(2,50);
+        q = random(2,20);
     }while(!isPrime(q));
     if(p == q){
         getPair();
@@ -59,42 +68,27 @@ int MainWindow::getB(long int y){
     while(true){
         r = random(2, y);
         if(gcd(r, y) == 1){
+            printf("\nb: %d", r);
             return r;
         }
     }
     return 0;
 }
 int MainWindow::extendEuclide(int b, int a){
-    int result, y0=0, y1=1, r, q;
-    while(a>0)
-        {
-            r=b%a;
-            if(r==0) break;
-            else
-            {
-            q=b/a;
-            result=y0-y1*q;
-            b=a;
-            a=r;
-            y0=y1;
-            y1=result;
-            }
-        }
-    if(result < 0){
-        return result + phi_n;
-    }
-    return result;
+    for (long int l = 1; l < b; l++)
+                {
+                    if ((a * l) % b == 1)
+                        return l;
+                }
+                return -1;
 }
 int MainWindow::modulo(int a, int b, int n){
-    long long x = 1, y = a;
-    while(b > 0){
-        if(b % 2 == 1){
-            x = (x * y) % n;
-        }
-        y = (y * y) % n;
-        b /= 2;
+    long result = 1L;
+    for (long l = 0; l < b; l++)
+    {
+        result = (result * a) % n;
     }
-    return x % n;
+    return result;
 }
 QString MainWindow::getPublicKey(){
     b = getB(phi_n);
@@ -107,24 +101,22 @@ QString MainWindow::getPublicKey(){
     return result;
 }
 QString MainWindow::getPrivateKey(){
-    QString privateKey = QString::number(extendEuclide(phi_n, b));
+    s = extendEuclide(phi_n, b);
+    QString privateKey = QString::number(s);
     return privateKey;
 }
 bool MainWindow::isPrime(int n){
     for(int i = 2; i <= (n / 2); i++){
         if(n % i == 0){
-            return 0;
+            return false;
         }
     }
-    return 1;
+    return true;
 }
 void MainWindow::convertStringToInt(char c[]){
     long length = strlen(c);
     for(int i = 0; i< length; i++){
-        temp[i] = c[i] - 'A';
-    }
-    for(int i=0; i<length; i++){
-        printf("%d\n", temp[i]);
+        temp[i] = c[i] - char(65);
     }
 }
 char* MainWindow::vh(QString str){
@@ -138,30 +130,58 @@ char* MainWindow::vh(QString str){
 char MainWindow::convertIntToChar(int i){
     return char(65 + i);
 }
-QString MainWindow::encrypt(){
-    convertStringToInt(vh(eMsg));
+char* MainWindow::encrypt(QString str){
+    char* x = new char(str.size() + 1);
+    char* mau = vh(str);
+    convertStringToInt(mau);
+    int length = strlen(mau);
     char arr[eMsg.length()];
-    for(int i = 0; i < eMsg.length(); i++ ){
+    for(int i = 0; i < length; i++ ){
         temp[i] = modulo(temp[i], b, n);
-        arr[i] = convertIntToChar(temp[i]);
+        printf("%d\n", temp[i]);
+        x[i] = convertIntToChar(temp[i]);
     }
-    QString enc(arr);
-    return enc;
+    for(int i = 0; i < length; i++ ){
+        printf("%c\n", x[i]);
+    }
+     return x;
 }
-QString MainWindow::decrypt(){
-    convertStringToInt(vh(eMsg));
-    char arr[eMsg.length()];
-    for(int i = 0; i < eMsg.length(); i++ ){
-        temp[i] = modulo(temp[i], b, n);
-        arr[i] = convertIntToChar(temp[i]);
+char* MainWindow::decrypt(QString str){
+    char* x = new char(str.size() + 1);
+    char* mau = vh(str);
+    int length = strlen(mau);
+    for(int i = 0; i < length; i++ ){
+        temp[i] = modulo(temp[i], s, n);
+        printf("%d\n", temp[i]);
+        x[i] = convertIntToChar(temp[i]);
     }
-    QString enc(arr);
-    return enc;
+    return x;
 }
 void MainWindow::on_decryptBtn_clicked()
 {
-    deMsg = ui->decryptText->toPlainText();
-    QString res = decrypt();
-    ui->encryptText->setPlainText(res);
+    deMsg = ui->decryptText->text();
+    QString res = decrypt(deMsg);
+    ui->encryptText->setText(res);
+}
+
+void MainWindow::writeFile(){
+    QString str = encrypt(eMsg);
+    QFile file("/Users/wuyxz/Documents/RSAQtApplication/encrypt.txt");
+    QTextStream textStream(&file);
+    if(file.open(QIODevice::WriteOnly)){
+        textStream << str;
+        file.close();
+    }
+}
+QString MainWindow::readFile(){
+    QString str;
+    QFile file("/Users/wuyxz/Documents/RSAQtApplication/key.txt");
+    QTextStream textStream(&file);
+    if(file.open(QIODevice::ReadOnly)){
+        str = ui->encryptText->text();
+        textStream << str;
+        file.close();
+    }
+    return str;
 }
 
