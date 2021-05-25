@@ -21,6 +21,8 @@ private slots:
 
     void on_decryptBtn_clicked();
 
+    void on_clearBtn_clicked();
+
 private:
     int random(int , int );
 private:

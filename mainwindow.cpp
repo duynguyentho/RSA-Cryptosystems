@@ -39,8 +39,8 @@ QString eMsg, deMsg;
 void MainWindow::on_encryptBtn_clicked()
 {
     eMsg = ui->encryptText->text();
-    QString res = encrypt(eMsg);
-    ui->decryptText->setText(res);
+    writeFile();
+    ui->decryptText->setText(readFile());
 }
 void MainWindow::getPair(){
     do{
@@ -175,13 +175,17 @@ void MainWindow::writeFile(){
 }
 QString MainWindow::readFile(){
     QString str;
-    QFile file("/Users/wuyxz/Documents/RSAQtApplication/key.txt");
+    QFile file("/Users/wuyxz/Documents/RSAQtApplication/encrypt.txt");
     QTextStream textStream(&file);
     if(file.open(QIODevice::ReadOnly)){
-        str = ui->encryptText->text();
-        textStream << str;
+        textStream >> str;
         file.close();
     }
     return str;
+}
+void MainWindow::on_clearBtn_clicked()
+{
+    ui->encryptText->setText("");
+    ui->decryptText->setText("");
 }
 
