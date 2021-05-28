@@ -1,0 +1,8 @@
+-Yêu cầu phần mềm:
+    - C++, Qt Creator, Xcode(nếu có)
+    - Thư viện Boost (Nếu chạy file console)
+-Hướng dẫn cài đặt
+    - Tải Qt Creator tại https://www.qt.io/download, sử dụng bản Trial 30days
+    - Tiến hành cài đặt Qt Creator
+    - Sau khi hoàn tất, mở Qt Creator và chọn Open Project... chọn RSAQtApplication 
+    - Nhấn run 
